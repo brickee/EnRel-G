@@ -1,16 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
 import argparse
-import csv
 import json
 import logging
 import os
 import random
-import sys
 import datetime
 
 import numpy as np
-np.set_printoptions(threshold=sys.maxsize)
 import torch
 import torch.nn.functional as F
 from pytorch_transformers import (WEIGHTS_NAME, AdamW, BertConfig,
@@ -21,12 +18,12 @@ from pytorch_transformers import (WEIGHTS_NAME, AdamW, BertConfig,
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
 from torch.utils.data.distributed import DistributedSampler
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 from seqeval.metrics import classification_report,f1_score
 
 
-from data_utils import NerProcessor,convert_examples_to_features,write2file,write2report,construct_graphs
+from data_utils import NerProcessor,convert_examples_to_features,write2file,write2report
 from model import Ner
 
 
@@ -79,8 +76,6 @@ def prepare_data(features):
     else:
         data = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_valid_ids,
                              all_lmask_ids)
-
-
 
     return data
 
@@ -156,7 +151,6 @@ def evaluate(eval_dataloader,model,label_map,args,tokenizer,device):
 def main():
     parser = argparse.ArgumentParser()
 
-    ## Required parameters
     parser.add_argument("--data_dir",
                         default=None,
                         type=str,
@@ -409,7 +403,6 @@ def main():
 
     text = 'murine bone marrow contains endothelial progenitors'
     tokens = tokenizer.tokenize(text)
-    print(tokens)
 
 
 
@@ -477,7 +470,6 @@ def main():
                 nb_tr_steps += 1
                 if nb_tr_steps %20 ==0:
                     logger.info('loss[%d,%d]: %f' %(epoch+1,nb_tr_steps,tr_loss/nb_tr_steps))
-                    # print(datetime.datetime.now(), tr_loss/nb_tr_steps)
 
                 if (step + 1) % args.gradient_accumulation_steps == 0:
                     optimizer.step()

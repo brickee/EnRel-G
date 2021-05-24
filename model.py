@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import torch.nn.functional as F
 from pytorch_transformers import (WEIGHTS_NAME, AdamW, BertConfig,
                                   BertForTokenClassification, BertTokenizer,
                                   WarmupLinearSchedule,BertModel,BertPreTrainedModel)
@@ -9,10 +8,7 @@ from torch.nn.parameter import Parameter
 import torch.autograd as autograd
 import copy
 
-from pyGAT.my_gat import GAT
-from pyGAT.build_graph import build_graph,get_sen_embed,build_sim_graph, build_dist_graph,combine_embeds
-
-from data_utils import subtokens2tokens
+from gat import GAT
 
 
 START_TAG: str = "[START]"
@@ -55,14 +51,13 @@ class Ner(nn.Module):
         self.num_labels = config.num_labels # labels include PAD, CLS, SEP but not START and STOP
         self.use_dropout = use_dropout
         if self.use_dropout:
-            self.dropout = nn.Dropout(config.hidden_dropout_prob)   #TODO: how to choose different dropout for different components?
+            self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.device = device
 
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
             self.embedding2nn = torch.nn.Linear(rnn_input_dim, rnn_input_dim)
 
-        # self.init_weights() #TODO: any problem here?
 
         self.use_rnn = use_rnn
         self.hidden_size = hidden_size
@@ -113,9 +108,6 @@ class Ner(nn.Module):
                         requires_grad=True,
                     )
 
-                    # TODO: Decide how to initialize the hidden state variables in the future
-                    # self.hs_initializer(self.lstm_init_h)
-                    # self.hs_initializer(self.lstm_init_c)
 
         if self.use_gat:
             # --------------------------------------------------------------------
@@ -309,7 +301,6 @@ class Ner(nn.Module):
             ## set padded label as 0, which will be filtered in post processing
             cur_bp.masked_fill_(mask[idx].view(batch_size, 1).expand(batch_size, tag_size), 0)
             back_points.append(cur_bp)
-        # exit(0)
         ### add score to final STOP_TAG
         partition_history = torch.cat(partition_history, 0).view(seq_len, batch_size, -1).transpose(1,0).contiguous() ## (batch_size, seq_len. tag_size)
         ### get the last position for each setences, and select the last partitions using gather()
@@ -337,7 +328,6 @@ class Ner(nn.Module):
             decode_idx[idx] = pointer.detach().view(batch_size)
         path_score = None
         decode_idx = decode_idx.transpose(1,0)
-        #TODO: why path score is None?
         return  decode_idx
 
     def _score_sentence(self, feats, tags, lens_):
@@ -377,7 +367,6 @@ class Ner(nn.Module):
     ) :
         forward_score = self._forward_alg(logits, lengths)
         gold_score = self._score_sentence(logits, labels, lengths)
-        #TODO: check if correct for negative log exp(score)
         loss = forward_score - gold_score  # batch_size NLL of the gold label
         return loss.mean()
 
@@ -400,7 +389,7 @@ class Ner(nn.Module):
             jj = -1
             valid_input_id = []
             for j in range(max_len):
-                    if valid_ids[i][j].item() == 1 and attention_mask[i][j]==1:   # take the head of those divided tokens! appdend 0 after it TODO: better way to make it faster?
+                    if valid_ids[i][j].item() == 1 and attention_mask[i][j]==1:   # take the head of those divided tokens! appdend 0 after it
                         jj += 1
                         valid_output[i][jj] = sequence_output[i][j]
                         valid_input_id.append(int(input_ids[i][j].to('cpu').numpy()))
@@ -499,11 +488,6 @@ class Ner(nn.Module):
                     loss = loss_fct(logits.view(-1, self.num_labels), labels.reshape(-1))
                 return loss
             else:
-                return logits  #TODO: bug here when not using crf but use rnn in evaluation
+                return logits
 
 
-
-if __name__ == "__main__":
-
-    ner = Ner()
-    ner._score_sentence()

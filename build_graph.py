@@ -53,8 +53,6 @@ def acronyms(tokens):
         if tokens[id - 1] == '(':
             flag = True
             for i in range(len(token)):
-                # TODO: cannot cover all situations,like Day 1 (Dy1)
-                # print(tokens[id-i-2], tokens[id-1-1],  token,token[-i-1])
                 try:
                     if tokens[id - i - 2][0].lower() != token[-i - 1].lower():
                         flag = False
@@ -154,8 +152,6 @@ def get_edges(sentence, pos_id,dep_id, head,longest_token_sequence_in_batch):
                 ##################################################
 
                 # all dependency tree
-
-
                 # if (head1==head2 ) and (head1!=-1):
                 #
                 #     edge = [idx1, idx2]
@@ -163,7 +159,7 @@ def get_edges(sentence, pos_id,dep_id, head,longest_token_sequence_in_batch):
                 #         edges_f.append(edge)
                 #
                 #     if int(head1 + 1) < longest_token_sequence_in_batch and int(
-                #             head1) > 0:  # TODO: bug in data preprocessing!
+                #             head1) > 0:
                 #
                 #         edge = [idx1, int(
                 #             head1) + 1]  # I checked that the idx of head is from idx of token, which starts from 0, but here we add [CLS] at first!, so add back
@@ -172,7 +168,6 @@ def get_edges(sentence, pos_id,dep_id, head,longest_token_sequence_in_batch):
                 #         edge = [idx2, int(head2) + 1]
                 #         if edge not in edges_f:
                 #             edges_f.append(edge)
-                # all but only Nouns
 
 
                 ##################################################
@@ -180,33 +175,18 @@ def get_edges(sentence, pos_id,dep_id, head,longest_token_sequence_in_batch):
                 ##################################################
 
                 # connect different dependent obj/sub, and root as predicate
-                # if (dep1 in subobj_map) and (dep2 in subobj_map) and (head1==head2 ) and (dep1!=dep2) and (subobj_map[dep1][-3:]!= subobj_map[dep2][-3:]) and dep_head ==root_map['ROOT']:
-                # head='ROOT' is new compared to previous flat platform
                 if (dep1 in subobj_map) and (dep2 in subobj_map) and (head1 == head2) and (dep1 != dep2) and (
                         subobj_map[dep1][-3:] != subobj_map[dep2][-3:]) and (
                         subobj_map[dep1][:5] != subobj_map[dep2][:5]):
-
-                        # Not for mars
-                        # and dep_head == root_map['ROOT']:
-
-                # connect all dependent words
-                # if (head1 == head2):
-
-                # conncet all dependent Nouns
-                # if (head1 == head2) and (pos1 in pos_list) and (pos2 in pos_list):
-                #     print([(tkn, i) for i, tkn in enumerate(sentence)])
-                #     print(bias + combs[0], bias + combs[1], dep1, dep2, subobj_map[dep1], subobj_map[dep2], head1, head2)
-                #     print(dep_id)
-                #     print(head)
 
                     edge = [idx1, idx2]
                     if edge not in edges_f:
                         edges_f.append(edge)
 
                     # connect head too!  Head start from 0!
-                    if int(head1+1)<longest_token_sequence_in_batch and int(head1)>0: # TODO: bug in data preprocessing!
+                    if int(head1+1)<longest_token_sequence_in_batch and int(head1)>0:
 
-                        edge = [idx1, int(head1)+1]  # I checked that the idx of head is from idx of token, which starts from 0, but here we add [CLS] at first!, so add back
+                        edge = [idx1, int(head1)+1]
                         if edge not in edges_f:
                             edges_f.append(edge)
                         edge = [idx2, int(head2)+1]
@@ -214,22 +194,21 @@ def get_edges(sentence, pos_id,dep_id, head,longest_token_sequence_in_batch):
                             edges_f.append(edge)
 
             except:
-                # assert sentence[-1] not in ['.', '!', '?']
                 continue
-
 
         biases.append(bias)
         bias+=len(sen_tkns)
 
-    # add compound, Only compound works
-    # add amod/nummod
-    # add nmod
+
     for edge in edges_f:
         for node in edge:
             for i in range(len(sentence)):
+                # add compound, Only compound works
                 if dep_id[i] in comp_map and (int(head[i])+1) == node:
+                # add amod/nummod
                 # if dep_id[i] in mod_map and (int(head[i]) + 1) == node:
                 # if dep_id[i] in nmod_map and (int(head[i]) + 1) == node:
+                # add nmod
                 # if dep_id[i] in all_map and (int(head[i]) + 1) == node:
                     com_edge = [node, i]
                     if com_edge not in edges_f:
@@ -265,8 +244,7 @@ def check_symmetric(a, rtol=1e-05, atol=1e-08):
 
 def build_graph(sentences,max_len, pos_ids, dep_ids, head):
 
-    # lengths = [len(sentence) for sentence in sentences]
-    # longest_token_sequence_in_batch = max(lengths)
+
     longest_token_sequence_in_batch = max_len
 
     # assert longest_token_sequence_in_batch <= 1024
@@ -274,7 +252,6 @@ def build_graph(sentences,max_len, pos_ids, dep_ids, head):
     for i in range(len(sentences)):
 
 
-        # tokens = [token for token in sent]
         edges_a,edges_b,edges_f,edges_g = get_edges(sentences[i],pos_ids[i],dep_ids[i], head[i],longest_token_sequence_in_batch)
         adj_a = edge2adj(edges_a,longest_token_sequence_in_batch)
 
@@ -402,7 +379,6 @@ def combine_embeds(sentence_tensor,sen_embed_batch_pad,seg_idx_list):
         out_tensor.append(com_embeds)
 
     out_tensor = pad_sequence(out_tensor,batch_first=True,padding_value=0)
-    # TODO: check what really happens here!
     if  out_tensor.size(1) != sentence_tensor.size(1):
         pad_tensor = torch.zeros(out_tensor.size(0),sentence_tensor.size(1)- out_tensor.size(1),out_tensor.size(2)).to(flair.device)
         out_tensor = torch.cat((out_tensor,pad_tensor),dim=1)
@@ -426,21 +402,19 @@ def load_tkn_dist_graph(max_len,lengths):
 
     with open('./data/AnatEM-1.0.2/tkn_dist_graph.pickle', 'rb') as handle:
         dist_As = pickle.load(handle)
-    # print(dist_As.shape)
+
     crop_dist_As = torch.tensor(np.tile(dist_As[:max_len,:max_len],(batch_size,1,1)),dtype=torch.float32)
-    # print(crop_dist_As.shape)
+
     mask = torch.zeros_like(crop_dist_As,dtype=torch.bool)
     for i,length in enumerate(lengths):
 
         mask[i][:length,:length] = True
-    # print(mask)
+
     crop_dist_As = crop_dist_As.masked_fill(mask, 0)
-    # print(crop_dist_As)
+
     return crop_dist_As
 
 
-
-    # print(edges_a)
 
 
 

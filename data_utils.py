@@ -14,7 +14,7 @@ dep_map = {'X':0, 'acl':1, 'acomp':2, 'advcl':3, 'advmod':4, 'agent':5, 'amod':6
 # csubj: clausal subject
 
 
-from pyGAT.build_graph import build_graph,get_sen_embed,build_sim_graph, build_dist_graph,combine_embeds
+from build_graph import build_graph
 
 class InputExample(object):
     """A single training/test example for simple sequence classification."""
@@ -47,9 +47,6 @@ class InputFeatures(object):
         self.label_id = label_id
         self.valid_ids = valid_ids
         self.label_mask = label_mask
-        # self.pos = pos
-        # self.dep = dep
-        # self.head = head
         self.adj_a = adj_a
         self.adj_f = adj_f
 
@@ -121,18 +118,15 @@ class NerProcessor(DataProcessor):
             self._read_tsv(os.path.join(data_dir, "test.para.128plus.128sub.Base.SciPosDep.conll")), "test")
 
     def get_labels(self, data_dir): # last one has to be 'SEP' ！！！！！
-        # TODO: check if O should be first!
         # return ["O", "B-MISC", "I-MISC",  "B-PER", "I-PER", "B-ORG", "I-ORG", "B-LOC", "I-LOC", "[CLS]", "[SEP]"]
         # print(self._read_tsv(os.path.join(data_dir, "labels.txt"))[0][0])
         label_list = ['O'] # make O to be in the first place
         label_list.extend([i.strip() for i in self._read_tsv(os.path.join(data_dir, "labels.txt"))[0][0][:-1]])
         label_list.extend(["[CLS]", "[SEP]"])
-        # print(label_list)
         return label_list
 
     def _create_examples(self,lines,set_type):
         examples = []
-        # print(lines)
         for i,(sentence,labels) in enumerate(lines):
             guid = "%s-%s" % (set_type, i)
             text_a = ' '.join(sentence)
@@ -143,7 +137,6 @@ class NerProcessor(DataProcessor):
                 if tag_i>0:
                     tags[tag]=[lbl[tag_i] for lbl in labels]
                     assert len(tags[tag]) == len(label)
-            # print(labels, label, tags)
             examples.append(InputExample(guid=guid,text_a=text_a,text_b=text_b,label=label, tags= tags))
         return examples
 
@@ -151,7 +144,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
     """Loads a data file into a list of `InputBatch`s."""
 
     label_map = {label : i for i, label in enumerate(label_list,1)}
-    # print(label_map)
 
     features = []
     for (ex_index,example) in enumerate(examples):
@@ -161,11 +153,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         labels = []
         valid = []
         label_mask = []
-        # print(tags)
         for i, word in enumerate(textlist):
-            #TODO:单个tokenize word的结果可能和整个tokenize sentence不一样！
-            # input_id 基于tokens(ntokens)建立。 因为有valid mask，所以对BERT本身没有影响。
-            # 但是图是在只保留了valid id上的构建的，所以要回归原句子的id
             token = tokenizer.tokenize(word)
             tokens.extend(token)
             label_1 = labellist[i]
@@ -187,7 +175,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
         assert labels == labellist # if not, try to modify tag processing
         # tag process
-        # pos, dep, head = ([] for i in range(3))
         for tag_name, tag in example.tags.items():
 
             if tag_name == 'pos':
@@ -198,8 +185,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
                 head = [int(t) for t in tag]
 
             assert len(tag) == len(labels)
-        # print(pos,dep,head)
-        if len(tokens) >= max_seq_length - 1:  # TODO: only remove longer part!
+        if len(tokens) >= max_seq_length - 1:
             tokens = tokens[0:(max_seq_length - 2)]
             labels = labels[0:(max_seq_length - 2)]
             valid = valid[0:(max_seq_length - 2)]
@@ -240,7 +226,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         head.insert(0,-1)  # 0 is used in the head number!
         head.append(-1)
 
-            # print(tag)
         while len(input_ids) < max_seq_length:
             input_ids.append(0)
             input_mask.append(0)
@@ -299,15 +284,11 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         # construct graphs
         if gat_type:
 
-            #TODO: the code before works on batch level, here need compatible
-            # 检查如何验证自己构图在模型中也是对的，不只是预处理
-            # print(ntokens)
             sentence = textlist
             if len(sentence) >= max_seq_length - 1:  #only remove longer part!
                 sentence = sentence[0:(max_seq_length - 2)]
             sentence.insert(0,'[CLS]')
             sentence.append('[SEP]')
-            # print(ntokens)
             adj_a, _, adj_f, _, _ = build_graph([sentence], max_len=max_seq_length, pos_ids=[pos], dep_ids=[dep], head=[head])
             if gat_type == 'A':
                 adj_a = adj_a[0].tolist()
@@ -330,9 +311,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
                               label_id=label_ids,
                               valid_ids=valid,
                               label_mask=label_mask,
-                              # pos = pos,
-                              # dep = dep,
-                              # head = head,
                               adj_a = adj_a,
                               adj_f = adj_f
                               ))
@@ -347,17 +325,9 @@ def construct_graphs(input_ids,tokenizer, pos_ids, dep_ids, head, max_len, type)
     sentences = []
     for i, input_id in enumerate(input_ids):
         input_id1 = input_id.to('cpu').numpy()
-        #TODO: find that this step will not correctly reconstruct the original tokens (e.g. g(-1)->'g', '(', '-', '1', ')')
         sub_tokens = tokenizer.convert_ids_to_tokens(input_id1)
-        # decode does not work
-        # text = tokenizer.decode(input_id)[0]
-        # tokens1 = text.strip().split(' ')
-        print(sub_tokens)
         tokens2 = subtokens2tokens(sub_tokens)
-        print(tokens2)
         tokens2 = [tkn for tkn in tokens2 if tkn != '[PAD]']
-        #TODO: try to verify this if the performance is not in line with intuition.
-        # assert len(tokens2) == len(valid_input_ids[i]) == lengths[i]
 
         sentences.append(tokens2)
     pos_ids = pos_ids.to('cpu').numpy()
