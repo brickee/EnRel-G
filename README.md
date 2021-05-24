@@ -1,2 +1,2 @@
-# EnRel
+# EnRel-G
 Codes for EnRel
