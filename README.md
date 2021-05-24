@@ -17,15 +17,3 @@ CUDA_VISIBLE_DEVICES=0 python -W ignore run_ner.py --data_dir=data/AnatEM --bert
 
 If you use this system, please cite the paper (to appear in ACL 2021) where it was introduced.
 
-[paper]() 
-```text
-@inproceedings{chen-etal-2021-probing,
- author = {Chen, Pei  and Liu, Kang  and Chen, Yubo  and Wang, Taifeng  and Zhao, Jun},
- booktitle = {Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume},
- month = {April},
- pages = {2042--2048},
- publisher = {Association for Computational Linguistics},
- title = {Probing into the Root: A Dataset for Reason Extraction of Structural Events from Financial Documents},
- year = {2021}
-}
-```
