@@ -1,0 +1,7 @@
+B-Element
+B-Mineral
+B-Target
+I-Element
+I-Mineral
+I-Target
+O
