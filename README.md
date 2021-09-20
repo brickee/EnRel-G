@@ -21,10 +21,7 @@ If you use this system, please cite the paper where it was introduced.
 ```text
 @inproceedings{chen-etal-2021-explicitly,
  address = {Online},
- author = {Chen, Pei  and
-Ding, Haibo  and
-Araki, Jun  and
-Huang, Ruihong},
+ author = {Chen, Pei  and Ding, Haibo  and Araki, Jun  and Huang, Ruihong},
  booktitle = {Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 2: Short Papers)},
  doi = {10.18653/v1/2021.acl-short.93},
  month = {August},
