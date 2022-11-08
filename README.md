@@ -3,7 +3,7 @@
 A Lightweight System for Improving the domain-specific Named Entity Recognition 
 
 ## Training & Prediction
-1. Put the downloaded BioBERT (https://github.com/dmis-lab/biobert) to *./pybiobert_base* and SciBERT (https://github.com/allenai/scibert) to *./scibert_scivocab_uncased* 
+1. Put the downloaded BioBERT(https://github.com/dmis-lab/biobert) to *./pybiobert_base* and SciBERT(https://github.com/allenai/scibert) to *./scibert_scivocab_uncased* 
 2. Put the conll-style data to *./data*. If you want to to change the dataset, make sure to change the parameter *--data_dir* and the file names in *data_utils.py*
 3. run the following commands or run the shell file: *sh run.sh*
 
