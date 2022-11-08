@@ -20,12 +20,8 @@ If you use this system, please cite the paper where it was introduced.
 [paper](https://aclanthology.org/2021.acl-short.93.pdf) 
 ```text
 @inproceedings{chen-etal-2021-explicitly,
- address = {Online},
  author = {Chen, Pei  and Ding, Haibo  and Araki, Jun  and Huang, Ruihong},
- booktitle = {Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 2: Short Papers)},
- doi = {10.18653/v1/2021.acl-short.93},
- month = {August},
- pages = {735--742},
+ booktitle = {ACL-2021},
  publisher = {Association for Computational Linguistics},
  title = {Explicitly Capturing Relations between Entity Mentions via Graph Neural Networks for Domain-specific Named Entity Recognition},
  url = {https://aclanthology.org/2021.acl-short.93},
