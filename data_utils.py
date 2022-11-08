@@ -105,19 +105,19 @@ class NerProcessor(DataProcessor):
     def get_train_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "train.para.128plus.128sub.Base.SciPosDep.conll")), "train")
+            self._read_tsv(os.path.join(data_dir, "train.conll")), "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "dev.para.128plus.128sub.Base.SciPosDep.conll")), "dev")
+            self._read_tsv(os.path.join(data_dir, "dev.conll")), "dev")
 
     def get_test_examples(self, data_dir):
         """See base class."""
         return self._create_examples(
-            self._read_tsv(os.path.join(data_dir, "test.para.128plus.128sub.Base.SciPosDep.conll")), "test")
+            self._read_tsv(os.path.join(data_dir, "test.conll")), "test")
 
-    def get_labels(self, data_dir): # last one has to be 'SEP' ！！！！！
+    def get_labels(self, data_dir): # last one has to be 'SEP' 
         # return ["O", "B-MISC", "I-MISC",  "B-PER", "I-PER", "B-ORG", "I-ORG", "B-LOC", "I-LOC", "[CLS]", "[SEP]"]
         # print(self._read_tsv(os.path.join(data_dir, "labels.txt"))[0][0])
         label_list = ['O'] # make O to be in the first place

@@ -6,6 +6,7 @@ import logging
 import os
 import random
 import datetime
+from tqdm import tqdm
 
 import numpy as np
 import torch
@@ -18,8 +19,6 @@ from pytorch_transformers import (WEIGHTS_NAME, AdamW, BertConfig,
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
 from torch.utils.data.distributed import DistributedSampler
-from tqdm import tqdm
-
 from seqeval.metrics import classification_report,f1_score
 
 
@@ -202,11 +201,11 @@ def main():
     parser.add_argument("--gat_type",
                         default="",
                         type=str,
-                        help="gat edge types")
+                        help="gat edge types, A for corefernce and F for dependency")
     parser.add_argument("--fuse_type",
                         default="v",
                         type=str,
-                        help="m,n,v")
+                        help="m,n,v: different ways to fuse the embeddings")
     parser.add_argument("--relearn_embed",
                         action='store_true',
                         help='Whether to relearn embeddings.')
@@ -272,18 +271,6 @@ def main():
     parser.add_argument('--server_port', type=str, default='', help="Can be used for distant debugging.")
     args = parser.parse_args()
     output_dir = '_'.join(['./saver/',args.data_dir.split('/')[-1], args.bert_model, str(args.max_seq_length), str(args.learning_rate), str(args.bert_lr), str(args.warmup_proportion),str(args.train_batch_size),str(int(args.num_train_epochs)), str(args.seed) ])
-    name_dic = {'A':'corrAcrDetkn', 'F': 'compDetkn', 'AF': 'corrAcrcompDetkn' } # 'F': 'compDetkn',
-    if args.use_crf:
-        output_dir+='_crf'
-    if args.use_rnn:
-        output_dir += '_rnn'
-    if args.use_gat:
-        output_dir += '_gat' + args.gat_type + name_dic[args.gat_type]+'-'+args.fuse_type
-
-    if args.do_lower_case:
-        output_dir += '_lower'
-    if args.relearn_embed:
-        output_dir += '_relearn'
 
 
     if args.server_ip and args.server_port:
@@ -399,13 +386,7 @@ def main():
     global_step = 0
     nb_tr_steps = 0
     tr_loss = 0
-
-
-    text = 'murine bone marrow contains endothelial progenitors'
-    tokens = tokenizer.tokenize(text)
-
-
-
+    
     if args.do_train:
         train_features = convert_examples_to_features(
             train_examples, label_list, args.max_seq_length, tokenizer, args.gat_type)
