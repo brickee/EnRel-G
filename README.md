@@ -17,7 +17,7 @@ python run_ner.py --data_dir=data/AnatEM --bert_model=pybiobert_base --task_name
 
 If you use this system, please cite the paper where it was introduced.
 
-[paper](https://aclanthology.org/2021.acl-short.93.pdf) 
+[paper link](https://aclanthology.org/2021.acl-short.93.pdf) 
 ```text
 @inproceedings{chen-etal-2021-explicitly,
  author = {Chen, Pei  and Ding, Haibo  and Araki, Jun  and Huang, Ruihong},
